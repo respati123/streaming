@@ -1,0 +1,51 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  youtubeId       String    @unique @map("youtube_id")
+  name            String
+  profileImageUrl String?   @map("profile_image_url")
+  points          Int       @default(0)
+  lastSeen        DateTime  @map("last_seen")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  messages        Message[]
+
+  @@map("users")
+}
+
+model Stream {
+  id             Int       @id @default(autoincrement())
+  youtubeVideoId String    @unique @map("youtube_video_id")
+  title          String
+  description    String?
+  status         String
+  startedAt      DateTime  @map("started_at")
+  endedAt        DateTime? @map("ended_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  messages       Message[]
+
+  @@map("streams")
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  content     String
+  streamId    Int      @map("stream_id")
+  userId      Int      @map("user_id")
+  publishedAt DateTime @map("published_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  stream      Stream   @relation(fields: [streamId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("messages")
+}

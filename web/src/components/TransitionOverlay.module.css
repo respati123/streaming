@@ -1,0 +1,84 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+  display: flex;
+}
+
+.panel {
+  position: absolute;
+  top: 0;
+  width: 125%;
+  height: 100%;
+  transform: translateX(-115%) skewX(-15deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+.panel1 {
+  background: linear-gradient(135deg, #ca8a04, #f59e0b);
+  z-index: 10;
+}
+
+.panel2 {
+  background: linear-gradient(135deg, #1e1e30, #161625);
+  z-index: 20;
+}
+
+.panel3 {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  z-index: 30;
+}
+
+/* Premium easing curve: extra smooth start/end */
+@keyframes slideToCenter {
+  0% { transform: translateX(-115%) skewX(-15deg); }
+  100% { transform: translateX(-10%) skewX(-15deg); }
+}
+
+@keyframes slideFromCenter {
+  0% { transform: translateX(-10%) skewX(-15deg); }
+  100% { transform: translateX(115%) skewX(-15deg); }
+}
+
+/* Animation states */
+.covering .panel1 { animation: slideToCenter 0.4s cubic-bezier(0.8, 0, 0.2, 1) forwards; }
+.covering .panel2 { animation: slideToCenter 0.4s cubic-bezier(0.8, 0, 0.2, 1) 0.03s forwards; }
+.covering .panel3 { animation: slideToCenter 0.4s cubic-bezier(0.8, 0, 0.2, 1) 0.06s forwards; }
+
+.revealing .panel1 { animation: slideFromCenter 0.4s cubic-bezier(0.8, 0, 0.2, 1) forwards; }
+.revealing .panel2 { animation: slideFromCenter 0.4s cubic-bezier(0.8, 0, 0.2, 1) 0.03s forwards; }
+.revealing .panel3 { animation: slideFromCenter 0.4s cubic-bezier(0.8, 0, 0.2, 1) 0.06s forwards; }
+
+/* While covered, maintain the exact end position of the cover animation */
+.covered .panel, 
+.covering .panel { transform: translateX(-10%) skewX(-15deg); }
+
+.logo {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 8rem;
+  color: #ca8a04;
+  text-transform: uppercase;
+  letter-spacing: 1rem;
+  opacity: 0;
+  transform: scale(0.8);
+  z-index: 100;
+  will-change: transform, opacity;
+}
+
+.covering .logo, .covered .logo {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s;
+}
+
+.revealing .logo {
+  opacity: 0;
+  transform: scale(1.1);
+  transition: all 0.2s ease-in;
+}

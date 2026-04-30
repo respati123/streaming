@@ -1,0 +1,57 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ccc;
+  font-size: 13px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.on {
+  background: #44ff44;
+  box-shadow: 0 0 6px #44ff44;
+}
+
+.off {
+  background: #ff4444;
+  box-shadow: 0 0 6px #ff4444;
+}
+
+.stream {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.live {
+  background: #ff0000;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.title {
+  color: #eee;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,18 @@
+.overlay {
+  width: 100vw;
+  height: 100vh;
+  background: transparent !important;
+  overflow: hidden;
+  position: relative;
+}
+
+.chatContainer {
+  position: absolute;
+  right: 40px; /* Margin from the right edge */
+  top: 40px;
+  bottom: 40px;
+  width: 480px; /* Leave some breathing room for the 450px bubbles */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Chat stacks at the bottom */
+}
