@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { playTransitionSound } from '../lib/audio';
 import styles from './TransitionOverlay.module.css';
 
 interface Props {
@@ -9,12 +10,14 @@ interface Props {
 export function TransitionOverlay({ phase = 'idle', onPhaseComplete }: Props) {
   // We use the phase prop directly to determine classes
   useEffect(() => {
-    if (phase === 'covering') {
-      const timer = setTimeout(() => onPhaseComplete?.('covered'), 500);
+    if (phase === "covering") {
+      playTransitionSound();
+      const timer = setTimeout(() => onPhaseComplete?.("covered"), 500);
       return () => clearTimeout(timer);
     }
-    if (phase === 'revealing') {
-      const timer = setTimeout(() => onPhaseComplete?.('idle'), 500);
+    if (phase === "revealing") {
+      playTransitionSound();
+      const timer = setTimeout(() => onPhaseComplete?.("idle"), 500);
       return () => clearTimeout(timer);
     }
   }, [phase, onPhaseComplete]);

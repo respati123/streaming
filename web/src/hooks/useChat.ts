@@ -3,12 +3,33 @@ import type { ChatMessage, WsMessage } from "../lib/types";
 
 interface UseChatOptions {
   maxMessages?: number;
-  onTransition?: (name: string) => void;
+  onTransition?: (phase: string) => void;
+  onDonation?: (donation: {
+    id: number;
+    donatorName: string;
+    amount: number;
+    message: string;
+    createdAt: string;
+    audioBase64: string | null;
+    audioDurationMs: number | null;
+    isAiReply?: boolean;
+    userMessage?: string;
+    originalDonatorName?: string;
+  }) => void;
 }
 
-export function useChat({ maxMessages = 50, onTransition }: UseChatOptions = {}) {
+export function useChat({ maxMessages = 50, onTransition, onDonation }: UseChatOptions = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
+  
+  // Use refs to store the latest callbacks without triggering re-renders
+  const onTransitionRef = useRef(onTransition);
+  const onDonationRef = useRef(onDonation);
+
+  useEffect(() => {
+    onTransitionRef.current = onTransition;
+    onDonationRef.current = onDonation;
+  }, [onTransition, onDonation]);
 
   const connect = useCallback(() => {
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
@@ -34,13 +55,17 @@ export function useChat({ maxMessages = 50, onTransition }: UseChatOptions = {})
             return next.length > maxMessages ? next.slice(-maxMessages) : next;
           });
         } else if (data.type === "transition") {
-          if (onTransition) onTransition(data.phase || 'start');
+          if (onTransitionRef.current) onTransitionRef.current(data.phase || 'start');
+        } else if (data.type === "donation") {
+          if (onDonationRef.current) onDonationRef.current(data);
         }
       } catch {}
     };
 
     ws.onclose = () => {
-      console.log("[ws] disconnected");
+      console.log("[ws] disconnected, reconnecting in 3s...");
+      wsRef.current = null;
+      setTimeout(connect, 3000);
     };
 
     ws.onerror = () => ws.close();

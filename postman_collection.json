@@ -1,0 +1,463 @@
+{
+	"info": {
+		"name": "Streaming Overlay API",
+		"description": "API collection untuk testing streaming overlay project. Backend jalan di localhost:3000.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000"
+		}
+	],
+	"item": [
+		{
+			"name": "General",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "Cek server status."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test Endpoints",
+			"description": "Endpoint buat simulasi & testing tanpa Streamer.bot.",
+			"item": [
+				{
+					"name": "Send Chat Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"userId\": \"test-user-001\",\n\t\"name\": \"Respati\",\n\t\"message\": \"Halo chat!\",\n\t\"profileImageUrl\": null,\n\t\"isOwner\": false,\n\t\"\"isModerator\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/test/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "test", "chat"]
+						},
+						"description": "Kirim satu chat message. Kalau userId belum ada, auto-create user baru. Field `message` wajib, sisanya opsional."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"ok\": true,\n\t\"user\": \"Respati\",\n\t\"tier\": \"viewer\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Burst Chat (Multiple)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"delay\": 300,\n\t\"messages\": [\n\t\t{ \"userId\": \"user-1\", \"name\": \"Andi\", \"message\": \"Pagi semuanya!\" },\n\t\t{ \"userId\": \"user-2\", \"name\": \"Sari\", \"message\": \"Mabar yuk\" },\n\t\t{ \"userId\": \"user-3\", \"name\": \"Budi\", \"message\": \"GG bro\", \"isModerator\": true }\n\t]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/test/chat/burst",
+							"host": ["{{base_url}}"],
+							"path": ["api", "test", "chat", "burst"]
+						},
+						"description": "Kirim banyak chat sekaligus dengan delay antar message. `delay` dalam ms (default 300). Setiap item di `messages` formatnya sama kayak Send Chat."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"ok\": true,\n\t\"sent\": 3,\n\t\"messages\": [\n\t\t\"Andi: Pagi semuanya!\",\n\t\t\"Sari: Mabar yuk\",\n\t\t\"Budi: GG bro\"\n\t]\n}"
+						}
+					]
+				},
+				{
+					"name": "Test Transition Overlay",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"phase\": \"start\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/test/transition",
+							"host": ["{{base_url}}"],
+							"path": ["api", "test", "transition"]
+						},
+						"description": "Trigger transition overlay di frontend. `phase` bisa \"start\" atau \"end\"."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"ok\": true,\n\t\"phase\": \"start\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Test Donation Alert",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"donatorName\": \"GenerousUser\",\n\t\"\"amount\": 50000,\n\t\"message\": \"Semangat streaming nya bro!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/test/donation",
+							"host": ["{{base_url}}"],
+							"path": ["api", "test", "donation"]
+						},
+						"description": "Trigger donation alert di overlay. Semua field opsional (default: donatorName=\"TestDonator\", amount=10000, message=\"\")."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"ok\": true,\n\t\"donation\": {\n\t\t\"id\": 5,\n\t\t\"donatorName\": \"GenerousUser\",\n\t\t\"amountRaw\": 50000,\n\t\t\"message\": \"Semangat streaming nya bro!\",\n\t\t\"saweriaId\": \"test-1777878417733-abc123\",\n\t\t\"type\": \"donation\",\n\t\t\"createdAt\": \"2026-05-04T07:09:16.598Z\"\n\t\t}\n\t}"
+						}
+					]
+				},
+				{
+					"name": "Reset All Test Data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/api/test/reset",
+							"host": ["{{base_url}}"],
+							"path": ["api", "test", "reset"]
+						},
+						"description": "⚠️ Hapus semua data test: donations, messages, streams, users. Gunakan dengan hati-hati!"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"ok\": true,\n\t\"message\": \"All test data cleared\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Saweria (Donation)",
+			"description": "Webhook dan query untuk donasi Saweria.",
+			"item": [
+				{
+					"name": "Webhook (Saweria → Server)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"version\": \"1\",\n\t\"created_at\": \"2026-05-04T15:30:00.000Z\",\n\t\"id\": \"00000000-0000-0000-0000-000000000001\",\n\t\"type\": \"donation\",\n\t\"amount_raw\": 50000,\n\t\"cut\": 5000,\n\t\"donator_name\": \"Someguy\",\n\t\"donator_email\": \"someguy@example.com\",\n\t\"donator_is_user\": false,\n\t\"message\": \"THIS IS A FAKE MESSAGE! HAVE A GOOD ONE\",\n\t\"etc\": {\n\t\t\"amount_to_display\": 50000\n\t}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/saweria/webhook",
+							"host": ["{{base_url}}"],
+							"path": ["api", "saweria", "webhook"]
+						},
+						"description": "Endpoint webhook yang dipanggil Saweria saat ada donasi. Dipakai juga buat test manual. Payload format sesuai dokumentasi Saweria. Deduplication otomatis by field `id`."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"ok\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "List Donations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/saweria/donations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "saweria", "donations"]
+						},
+						"description": "Ambil 50 donasi terbaru, diurutkan dari yang terbaru. Include total amount."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"donations\": [\n\t\t{\n\t\t\t\"id\": 1,\n\t\t\t\"donatorName\": \"Budi Santoso\",\n\t\t\t\"donatorEmail\": null,\n\t\t\t\"amountRaw\": 50000,\n\t\t\t\"message\": \"Semangat!\",\n\t\t\t\"saweriaId\": \"test-abc123\",\n\t\t\t\"type\": \"donation\",\n\t\t\t\"createdAt\": \"2026-05-04T07:09:16.598Z\"\n\t\t}\n\t],\n\t\"totalAmount\": 50000,\n\t\"count\": 1\n}"
+						}
+					]
+				},
+				{
+					"name": "Top Donators",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/saweria/donations/top",
+							"host": ["{{base_url}}"],
+							"path": ["api", "saweria", "donations", "top"]
+						},
+						"description": "Top 10 donatur berdasarkan total amount. Grouped by name."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"status": "200",
+							"body": "{\n\t\"top\": [\n\t\t{\n\t\t\t\"name\": \"Budi Santoso\",\n\t\t\t\"totalAmount\": 150000,\n\t\t\t\"donationCount\": 3\n\t\t}\n\t]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Streamer.bot",
+			"description": "Koneksi dan kontrol Streamer.bot (harus ada Streamer.bot yang running).",
+			"item": [
+				{
+					"name": "Connection Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streamerbot/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streamerbot", "status"]
+						},
+						"description": "Cek apakah backend terhubung ke Streamer.bot."
+					},
+					"response": [
+						{
+							"name": "Connected",
+							"status": "200",
+							"body": "{\n\t\"connected\": true\n}"
+						},
+						{
+							"name": "Disconnected",
+							"status": "200",
+							"body": "{\n\t\"connected\": false\n}"
+						}
+					]
+				},
+				{
+					"name": "List Actions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streamerbot/actions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streamerbot", "actions"]
+						},
+						"description": "Ambil daftar actions yang tersedia di Streamer.bot."
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Action",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streamerbot/actions/:id/execute",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streamerbot", "actions", ":id", "execute"]
+						},
+						"description": "Eksekusi action Streamer.bot by ID. Ganti `:id` dengan action ID yang valid."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"description": "Query data user.",
+			"item": [
+				{
+					"name": "List All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"]
+						},
+						"description": "Ambil semua user, diurutkan berdasarkan lastSeen. Include jumlah messages per user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by YouTube ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/:youtubeId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", ":youtubeId"]
+						},
+						"description": "Ambil detail user berdasarkan YouTube ID. Ganti `:youtubeId` dengan ID yang valid."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Streams",
+			"description": "Query data stream & chat history.",
+			"item": [
+				{
+					"name": "List All Streams",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streams",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streams"]
+						},
+						"description": "Ambil semua stream, diurutkan dari yang terbaru. Include jumlah messages per stream."
+					},
+					"response": []
+				},
+				{
+					"name": "Current Live Stream",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streams/current",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streams", "current"]
+						},
+						"description": "Ambil stream yang sedang live (status = \"live\")."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Stream by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streams/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streams", ":id"]
+						},
+						"description": "Ambil detail stream berdasarkan ID. Ganti `:id` dengan angka."
+					},
+					"response": []
+				},
+				{
+					"name": "Stream Messages (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streams/:id/messages?page=1&limit=50",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streams", ":id", "messages"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Halaman (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Jumlah per halaman (default: 50)"
+								}
+							]
+						},
+						"description": "Ambil messages dari stream tertentu dengan pagination."
+					},
+					"response": []
+				},
+				{
+					"name": "Recent Chat History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/streams/history/recent?limit=50",
+							"host": ["{{base_url}}"],
+							"path": ["api", "streams", "history", "recent"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Jumlah message terbaru (default: 50)"
+								}
+							]
+                        },
+						"description": "Ambil chat history terbaru dari semua stream, sudah di-format sama kayak WebSocket message."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "WebSocket",
+			"item": [
+				{
+					"name": "Chat WebSocket",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "ws://localhost:3000/ws/chat",
+							"protocol": "ws",
+							"host": ["localhost:3000"],
+							"path": ["ws", "chat"]
+						},
+						"description": "WebSocket endpoint buat real-time chat. Connect via `ws://localhost:3000/ws/chat`.\n\n**Message types yang dikirim server:**\n\n```json\n{ \"type\": \"connected\", \"message\": \"Streaming chat ws active\" }\n```\n```json\n{ \"type\": \"chat\", \"user\": { \"name\": \"...\", \"color\": \"...\", \"badge\": \"...\", \"points\": 0, \"profileImageUrl\": \"...\" }, \"content\": \"...\", \"publishedAt\": \"...\" }\n```\n```json\n{ \"type\": \"donation\", \"id\": 1, \"donatorName\": \"...\", \"amount\": 50000, \"message\": \"...\", \"createdAt\": \"...\" }\n```\n```json\n{ \"type\": \"transition\", \"phase\": \"start\" | \"end\" }\n```\n\n⚠️ Postman support WebSocket mulai v10+. Di Postman, klik New → WebSocket Request."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

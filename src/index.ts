@@ -6,6 +6,7 @@ import { createNodeWebSocket } from "@hono/node-ws";
 import { streamerbotRoute } from "./routes/streamerbot";
 import { usersRoute } from "./routes/users";
 import { streamsRoute } from "./routes/streams";
+import { saweriaRoute } from "./routes/saweria";
 import { registerClient, removeClient } from "./lib/ws";
 import "./services/streamerbot";
 
@@ -35,6 +36,7 @@ app.get("/ws/chat", upgradeWebSocket(() => ({
 app.route("/api/streamerbot", streamerbotRoute);
 app.route("/api/users", usersRoute);
 app.route("/api/streams", streamsRoute);
+app.route("/api/saweria", saweriaRoute);
 
 const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log("Server running on http://localhost:" + info.port);

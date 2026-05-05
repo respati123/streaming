@@ -1,0 +1,95 @@
+.dialogueContainer {
+  position: absolute;
+  bottom: 100px; /* Positioned slightly above the bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 800px;
+  z-index: 15000;
+  
+  /* Entrance animation */
+  animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.dialogueContainer.exit {
+  animation: fadeOut 0.6s ease-in forwards;
+}
+
+.namePlate {
+  font-family: "VT323", monospace;
+  font-size: 32px;
+  color: #fbbf24; /* Yellow text */
+  background-color: #1f2937; /* Dark background */
+  border: 4px solid #d1d5db; /* Light border */
+  border-bottom: none;
+  display: inline-block;
+  padding: 4px 16px;
+  border-radius: 8px 8px 0 0;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  margin-left: 20px;
+  position: relative;
+  z-index: 2;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.dialogueBox {
+  font-family: "VT323", monospace;
+  font-size: 36px;
+  color: white;
+  background-color: rgba(31, 41, 55, 0.95); /* Semi-transparent dark bg */
+  border: 4px solid #d1d5db; /* Light gray thick border */
+  border-radius: 8px;
+  padding: 24px 32px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.8);
+  position: relative;
+  z-index: 1;
+  text-shadow: 2px 2px 0 #000;
+  line-height: 1.4;
+}
+
+.text {
+  /* This creates a simple typewriter effect natively, but since audio sync is hard, 
+     we just let it display normally or use a basic fade in */
+  animation: fadeInText 0.5s ease-in forwards;
+}
+
+.arrowBounce {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  color: white;
+  font-size: 24px;
+  animation: bounce 1s infinite;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translate(-50%, 50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 20px) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInText {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}

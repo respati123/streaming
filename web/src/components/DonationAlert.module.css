@@ -1,0 +1,209 @@
+.alert {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  z-index: 9999;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+}
+
+.exit {
+  animation: popOut 0.5s ease-in forwards;
+}
+
+.glow {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(ellipse at center, rgba(202, 138, 4, 0.3), transparent 70%);
+  animation: pulse 1.5s ease-in-out infinite;
+  z-index: -1;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(15, 23, 42, 0.95));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid rgba(202, 138, 4, 0.6);
+  border-radius: 16px;
+  padding: 24px 36px;
+  min-width: 380px;
+  box-shadow:
+    0 0 30px rgba(202, 138, 4, 0.3),
+    0 0 60px rgba(202, 138, 4, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.icon {
+  font-size: 40px;
+  animation: sparkle 1s ease-in-out infinite alternate;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.name {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: #fbbf24;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+.amount {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #ca8a04, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.message {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 300px;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Particles */
+.particles {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size, 5px);
+  height: var(--size, 5px);
+  background: #fbbf24;
+  border-radius: 50%;
+  animation: particleFly 1.5s ease-out var(--delay, 0s) forwards;
+  opacity: 0;
+  box-shadow: 0 0 6px #fbbf24;
+}
+
+/* Animations */
+@keyframes popIn {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(-5deg);
+    opacity: 0;
+  }
+
+  60% {
+    transform: translate(-50%, -50%) scale(1.1) rotate(1deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes popOut {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(0.8) translateY(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes sparkle {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  100% {
+    transform: scale(1.15) rotate(10deg);
+  }
+}
+
+@keyframes particleFly {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(var(--x, 0), var(--y, -200px));
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .exit {
+    animation: fadeOut 0.3s ease-in forwards;
+  }
+
+  .particle,
+  .glow,
+  .icon {
+    animation: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

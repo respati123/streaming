@@ -20,7 +20,16 @@ export interface ConnectedMessage {
   message: string;
 }
 
-export type WsMessage = ChatMessage | ConnectedMessage;
+export interface DonationMessage {
+  type: "donation";
+  id: number;
+  donatorName: string;
+  amount: number;
+  message: string;
+  createdAt: string;
+}
+
+export type WsMessage = ChatMessage | ConnectedMessage | DonationMessage;
 
 export interface ApiUser {
   id: number;
