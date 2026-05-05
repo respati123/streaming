@@ -1,10 +1,10 @@
 .dialogueContainer {
   position: absolute;
-  bottom: 100px; /* Positioned slightly above the bottom */
+  bottom: 40px; /* Closer to the bottom edge */
   left: 50%;
   transform: translateX(-50%);
-  width: 80%;
-  max-width: 800px;
+  width: 70%;
+  max-width: 600px;
   z-index: 15000;
   
   /* Entrance animation */
@@ -17,13 +17,13 @@
 
 .namePlate {
   font-family: "VT323", monospace;
-  font-size: 32px;
+  font-size: 24px;
   color: #fbbf24; /* Yellow text */
   background-color: #1f2937; /* Dark background */
   border: 4px solid #d1d5db; /* Light border */
   border-bottom: none;
   display: inline-block;
-  padding: 4px 16px;
+  padding: 2px 12px;
   border-radius: 8px 8px 0 0;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
   margin-left: 20px;
@@ -34,12 +34,12 @@
 
 .dialogueBox {
   font-family: "VT323", monospace;
-  font-size: 36px;
+  font-size: 26px;
   color: white;
   background-color: rgba(31, 41, 55, 0.95); /* Semi-transparent dark bg */
   border: 4px solid #d1d5db; /* Light gray thick border */
   border-radius: 8px;
-  padding: 24px 32px;
+  padding: 16px 24px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.8);
   position: relative;
   z-index: 1;

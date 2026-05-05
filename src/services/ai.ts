@@ -69,7 +69,7 @@ Aturan:
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || null;
+    return data?.choices?.[0]?.message?.content || null;
   } catch (error) {
     console.error("[ai] Failed to generate AI reply:", error);
     return null;
