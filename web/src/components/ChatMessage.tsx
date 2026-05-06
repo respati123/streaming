@@ -15,7 +15,7 @@ export function ChatMessage({ message }: Props) {
   const hasBadge = user.badge && user.badge !== "none";
 
   return (
-    <article className={styles.item}>
+    <article className={styles.item} data-tier={user.badge || ""} style={{ "--tier-color": user.color } as React.CSSProperties}>
       <header className={styles.header}>
         {hasBadge && (
           <img

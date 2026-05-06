@@ -46,7 +46,7 @@ testRoute.post("/chat", async (c) => {
     user: {
       name: user.name,
       color: tier.color,
-      badge: isModerator ? "MOD" : isOwner ? "OWNER" : tier.badge,
+      badge: isModerator ? "shield_gold" : isOwner ? "shield_futuristic" : tier.badge,
       points: user.points,
       profileImageUrl: profileImageUrl || null,
     },
@@ -96,7 +96,7 @@ testRoute.post("/chat/burst", async (c) => {
       user: {
         name: user.name,
         color: tier.color,
-        badge: msg.isModerator ? "MOD" : msg.isOwner ? "OWNER" : tier.badge,
+        badge: msg.isModerator ? "shield_gold" : msg.isOwner ? "shield_futuristic" : tier.badge,
         points: user.points,
         profileImageUrl: msg.profileImageUrl || null,
       },
@@ -175,6 +175,57 @@ testRoute.post("/transition", async (c) => {
 
   broadcastChat({ type: "transition", phase });
   return c.json({ ok: true, phase });
+});
+
+// POST /api/test/tiers — Send one message from each tier user to preview badges
+testRoute.post("/tiers", async (c) => {
+  const tierUsers = [
+    { youtubeId: "test-pokeball",     name: "NovicePlayer",  points: 0,     tier: "Pokeball (0 pts)" },
+    { youtubeId: "test-shield-blue",  name: "BlueKnight",    points: 500,   tier: "Shield Blue (500 pts)" },
+    { youtubeId: "test-shield-gold",  name: "GoldGuardian",  points: 2000,  tier: "Shield Gold (2000 pts)" },
+    { youtubeId: "test-viper",        name: "ViperStrike",   points: 5000,  tier: "Viper (5000 pts)" },
+    { youtubeId: "test-futuristic",   name: "FuturistX",     points: 10000, tier: "Shield Futuristic (10k pts)" },
+  ];
+
+  let stream = await prisma.stream.findFirst({ where: { status: "live" } });
+  if (!stream) {
+    stream = await prisma.stream.create({
+      data: { youtubeVideoId: `test-${Date.now()}`, title: "Test Stream", status: "live", startedAt: new Date() },
+    });
+  }
+
+  const results = [];
+
+  for (const tu of tierUsers) {
+    const user = await prisma.user.upsert({
+      where: { youtubeId: tu.youtubeId },
+      update: { name: tu.name, points: tu.points, lastSeen: new Date() },
+      create: { youtubeId: tu.youtubeId, name: tu.name, points: tu.points, lastSeen: new Date() },
+    });
+
+    await prisma.message.create({
+      data: { content: `Hello! I'm tier ${tu.tier}`, userId: user.id, streamId: stream.id, publishedAt: new Date() },
+    });
+
+    const tier = getTier(user.points);
+    broadcastChat({
+      type: "chat",
+      user: {
+        name: user.name,
+        color: tier.color,
+        badge: tier.badge,
+        points: user.points,
+        profileImageUrl: null,
+      },
+      content: `Hello! I'm tier ${tu.tier}`,
+      publishedAt: new Date().toISOString(),
+    });
+
+    results.push({ name: user.name, points: user.points, badge: tier.badge, color: tier.color });
+    await new Promise((r) => setTimeout(r, 400));
+  }
+
+  return c.json({ ok: true, sent: results });
 });
 
 // POST /api/test/reset — Clear all test data

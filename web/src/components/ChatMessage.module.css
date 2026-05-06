@@ -15,19 +15,65 @@
   animation: slideUp 0.3s ease-out;
   border-left: 3px solid transparent;
   transition: all 0.2s;
-  
+
   background-color: rgba(13, 13, 13, 0.5);
   backdrop-filter: blur(6px);
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  
+
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-left-color: var(--stitch-accent);
+  filter: brightness(1.2);
 }
+
+/* ── Tier styles ── */
+
+.item[data-tier="pokeball"] {
+  border-left-color: #555;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.item[data-tier="shield_blue"] {
+  border-left-color: #00AAFF;
+  background-color: rgba(0, 170, 255, 0.06);
+  border-color: rgba(0, 170, 255, 0.1);
+}
+
+.item[data-tier="shield_gold"] {
+  border-left-color: #FF6B00;
+  background-color: rgba(255, 107, 0, 0.06);
+  border-color: rgba(255, 107, 0, 0.12);
+}
+
+.item[data-tier="viper"] {
+  border-left-color: #FFD700;
+  background-color: rgba(255, 215, 0, 0.07);
+  border-color: rgba(255, 215, 0, 0.15);
+  box-shadow: inset 3px 0 12px -6px rgba(255, 215, 0, 0.15);
+}
+
+.item[data-tier="shield_futuristic"] {
+  border-left-color: #C084FC;
+  background-color: rgba(192, 132, 252, 0.08);
+  border-color: rgba(192, 132, 252, 0.18);
+  box-shadow: inset 3px 0 16px -6px rgba(192, 132, 252, 0.2),
+              0 0 20px -8px rgba(192, 132, 252, 0.08);
+}
+
+/* ── Tier username styling ── */
+
+.item[data-tier="viper"] .username {
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.item[data-tier="shield_futuristic"] .username {
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.5);
+}
+
+/* ── Animations ── */
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -55,9 +101,10 @@
 
 .username {
   font-size: 14px;
-  font-weight: 700; /* Bold for Poppins */
-  color: var(--name-highlight) !important;
+  font-weight: 700;
+  color: var(--tier-color, var(--name-highlight)) !important;
   letter-spacing: -0.01em;
+  transition: text-shadow 0.2s;
 }
 
 .timestamp {
