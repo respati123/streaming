@@ -60,11 +60,8 @@ export function Overlay() {
   });
 
   useEffect(() => {
-    // Attempt to automatically unlock audio on mount (works in OBS)
     unlockAudio();
 
-    // Fallback: if testing in regular browser (Chrome/Safari), 
-    // it requires at least one click anywhere on the page to allow audio playback.
     const handleFirstInteraction = () => {
       unlockAudio();
       window.removeEventListener('click', handleFirstInteraction);

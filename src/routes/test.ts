@@ -177,6 +177,33 @@ testRoute.post("/transition", async (c) => {
   return c.json({ ok: true, phase });
 });
 
+// POST /api/test/lightning — Trigger lightning flash overlay
+testRoute.post("/lightning", async (c) => {
+  const body = await c.req.json();
+  const { amount = 100000, donatorName = "TestDonator", message = "Mega donation!" } = body;
+
+  const donation = await prisma.donation.create({
+    data: {
+      saweriaId: `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      donatorName,
+      amountRaw: amount,
+      message,
+      type: "donation",
+    },
+  });
+
+  donationQueue.push({
+    id: donation.id,
+    donatorName,
+    amount,
+    message,
+    createdAt: donation.createdAt.toISOString(),
+    skipTts: true,
+  });
+
+  return c.json({ ok: true, note: "Lightning triggers on amount >= 50,000", amount });
+});
+
 // POST /api/test/tiers — Send one message from each tier user to preview badges
 testRoute.post("/tiers", async (c) => {
   const tierUsers = [

@@ -48,19 +48,22 @@
   border-color: rgba(255, 107, 0, 0.12);
 }
 
+/* ── Viper: electric gold glow ── */
+
 .item[data-tier="viper"] {
   border-left-color: #FFD700;
   background-color: rgba(255, 215, 0, 0.07);
-  border-color: rgba(255, 215, 0, 0.15);
-  box-shadow: inset 3px 0 12px -6px rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.35);
+  animation: slideUp 0.3s ease-out, viperPulse 2s ease-in-out infinite;
 }
+
+/* ── Shield Futuristic: electric purple glow ── */
 
 .item[data-tier="shield_futuristic"] {
   border-left-color: #C084FC;
   background-color: rgba(192, 132, 252, 0.08);
-  border-color: rgba(192, 132, 252, 0.18);
-  box-shadow: inset 3px 0 16px -6px rgba(192, 132, 252, 0.2),
-              0 0 20px -8px rgba(192, 132, 252, 0.08);
+  border-color: rgba(192, 132, 252, 0.4);
+  animation: slideUp 0.3s ease-out, futuristicPulse 1.5s ease-in-out infinite;
 }
 
 /* ── Tier username styling ── */
@@ -79,6 +82,47 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes viperPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px -2px rgba(255, 215, 0, 0.3),
+      inset 0 0 12px -4px rgba(255, 215, 0, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 16px -2px rgba(255, 215, 0, 0.5),
+      0 0 30px -4px rgba(255, 215, 0, 0.15),
+      inset 0 0 18px -4px rgba(255, 215, 0, 0.15);
+  }
+}
+
+@keyframes futuristicPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px -2px rgba(192, 132, 252, 0.4),
+      inset 0 0 14px -4px rgba(192, 132, 252, 0.1);
+  }
+  30% {
+    box-shadow:
+      0 0 20px -2px rgba(192, 132, 252, 0.6),
+      0 0 40px -4px rgba(168, 85, 247, 0.2),
+      inset 0 0 22px -4px rgba(192, 132, 252, 0.15);
+  }
+  60% {
+    box-shadow:
+      0 0 8px -2px rgba(192, 132, 252, 0.3),
+      inset 0 0 10px -4px rgba(192, 132, 252, 0.08);
+  }
+  80% {
+    box-shadow:
+      0 0 18px -2px rgba(192, 132, 252, 0.55),
+      0 0 35px -4px rgba(168, 85, 247, 0.18),
+      inset 0 0 20px -4px rgba(192, 132, 252, 0.12);
+  }
+}
+
+/* ── Layout ── */
 
 .header {
   display: flex;
