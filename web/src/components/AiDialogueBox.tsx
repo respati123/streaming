@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react";
+import { unlockAudio } from "../lib/audio";
 import styles from "./AiDialogueBox.module.css";
-import { playDonationSound } from "../lib/audio";
 
 interface AiDialogueData {
   id: number;
-  donatorName: string; // Will usually be "AI Respati"
+  donatorName: string;
   message: string;
   audioBase64: string | null;
   audioDurationMs: number | null;
@@ -16,126 +16,129 @@ interface AiDialogueBoxProps {
   dialogue: AiDialogueData | null;
 }
 
-function calcDisplayDuration(message: string) {
-  // Rough estimate: ~130 wpm => ~2 words per sec => ~500ms per word + 3s buffer
-  const words = message.split(/\s+/).length;
-  return Math.max(words * 500, 3000);
-}
-
 export function AiDialogueBox({ dialogue }: AiDialogueBoxProps) {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [current, setCurrent] = useState<AiDialogueData | null>(null);
-  
-  // Phase management: 'user' phase then 'ai' phase
-  const [phase, setPhase] = useState<"user" | "ai">("user");
+  const [phase, setPhase] = useState<"user" | "ai">("ai");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const switchTimerRef = useRef<Timer | null>(null);
-  const fallbackTimerRef = useRef<Timer | null>(null);
+  useEffect(() => {
+    if (!visible || !current?.audioBase64) return;
+
+    unlockAudio();
+    const audio = new Audio(`data:audio/mp3;base64,${current.audioBase64}`);
+    audio.volume = 1;
+    audioRef.current = audio;
+
+    audio.play().catch(() => {});
+
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, [visible, current?.audioBase64]);
 
   useEffect(() => {
     if (!dialogue) return;
 
     setCurrent(dialogue);
-    setVisible(true);
     setExiting(false);
 
-    // If there's a userMessage, start in 'user' phase, else skip to 'ai'
-    if (dialogue.userMessage && dialogue.originalDonatorName) {
-      setPhase("user");
-    } else {
-      setPhase("ai");
+    const hasUserMsg = dialogue.userMessage && dialogue.originalDonatorName;
+
+    // Enter on next frame so CSS transition triggers
+    requestAnimationFrame(() => {
+      setVisible(true);
+
+      if (hasUserMsg) {
+        setPhase("user");
+      } else {
+        setPhase("ai");
+      }
+    });
+
+    const timers: Timer[] = [];
+
+    // Switch from user phase to AI phase after delay
+    if (hasUserMsg) {
+      timers.push(setTimeout(() => {
+        setPhase("ai");
+      }, 3000));
     }
 
-    const triggerExit = (delayMs: number = 0) => {
-      fallbackTimerRef.current = setTimeout(() => {
-        setExiting(true);
-        setTimeout(() => {
-          setVisible(false);
-          setCurrent(null);
-        }, 600); // 600ms matches CSS exit animation duration
-      }, delayMs);
-    };
+    // Auto-exit
+    const aiDelay = hasUserMsg ? 6000 : 3000;
+    const exitDelay = current?.audioDurationMs
+      ? aiDelay + current.audioDurationMs
+      : aiDelay;
 
-    if (dialogue.audioBase64) {
-      const audio = new Audio(`data:audio/mpeg;base64,${dialogue.audioBase64}`);
-      audio.volume = 0.8;
-      
-      let userDurationMs = 0;
-      let aiDurationMs = dialogue.audioDurationMs || calcDisplayDuration(dialogue.message);
+    timers.push(setTimeout(() => {
+      setExiting(true);
+      setVisible(false);
+    }, exitDelay));
 
-      // Calculate proportional duration for user speech if we have both
-      if (dialogue.userMessage && dialogue.originalDonatorName) {
-        const userWords = dialogue.userMessage.split(/\s+/).length;
-        const aiWords = dialogue.message.split(/\s+/).length;
-        const totalWords = userWords + aiWords;
-        
-        // Use provided audio duration or fallback to calculated
-        const totalDurationMs = dialogue.audioDurationMs || ((totalWords / 110) * 60 * 1000);
-        
-        userDurationMs = (userWords / totalWords) * totalDurationMs;
-        // add a tiny bit of buffer (200ms) to ensure text switches cleanly
-        userDurationMs += 200; 
-
-        switchTimerRef.current = setTimeout(() => {
-          setPhase("ai");
-        }, userDurationMs);
-      }
-
-      audio.onended = () => {
-        triggerExit(1000); // 1s buffer after exact audio ends
-      };
-
-      audio.play().catch((e) => {
-        console.warn("[audio] TTS play failed:", e);
-        playDonationSound();
-        triggerExit(userDurationMs + aiDurationMs);
-      });
-    } else {
-      playDonationSound();
-      const userDurationMs = dialogue.userMessage ? calcDisplayDuration(dialogue.userMessage) : 0;
-      const aiDurationMs = calcDisplayDuration(dialogue.message);
-      
-      if (userDurationMs > 0) {
-        switchTimerRef.current = setTimeout(() => {
-          setPhase("ai");
-        }, userDurationMs);
-      }
-      
-      triggerExit(userDurationMs + aiDurationMs);
-    }
-
-    return () => {
-      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
-      if (switchTimerRef.current) clearTimeout(switchTimerRef.current);
-    };
+    return () => timers.forEach(clearTimeout);
   }, [dialogue]);
 
-  if (!visible || !current) return null;
+  if (!current) return null;
 
-  const currentName = phase === "user" && current.originalDonatorName 
-    ? current.originalDonatorName 
+  const currentName = phase === "user" && current.originalDonatorName
+    ? current.originalDonatorName
     : current.donatorName;
-    
-  const currentText = phase === "user" && current.userMessage 
-    ? current.userMessage 
+
+  const currentText = phase === "user" && current.userMessage
+    ? current.userMessage
     : current.message;
 
   return (
-    <div className={`${styles.dialogueContainer} ${exiting ? styles.exit : ""}`}>
-      {/* Name plate */}
-      <div className={styles.namePlate}>
-        {currentName.toUpperCase()}
-      </div>
-      
-      {/* Dialogue box */}
-      <div className={styles.dialogueBox}>
-        {/* We use a key based on phase to re-trigger the CSS animation when text changes */}
-        <div key={phase} className={styles.text}>
-          {currentText}
+    <div className={`${styles.overlay} ${visible && !exiting ? styles.visible : exiting ? styles.exit : ""}`}>
+        <div className={styles.container}>
+
+          {/* NPC Name Tag */}
+          <div className={styles.nameTagContainer}>
+            <div className={styles.nameTag}>
+              <span className={styles.tagLabel}>NAME TAG</span>
+              <span>{currentName.toUpperCase()}</span>
+            </div>
+          </div>
+
+          {/* Main Dialogue Box */}
+          <div className={styles.dialogueBox}>
+            <div className={styles.innerBorder}>
+              <div className={styles.content}>
+
+                {/* Character Avatar Area */}
+                <div className={styles.avatarArea}>
+                  <div className={styles.avatarBox}>
+                    <div className={styles.avatarOverlay} />
+                    <div className={styles.crossPattern}>
+                      <div className={`${styles.crossLine} ${styles.crossLine1}`} />
+                      <div className={`${styles.crossLine} ${styles.crossLine2}`} />
+                    </div>
+                    <img
+                      src="/images/donation1.png"
+                      alt="Avatar"
+                      className={styles.avatarImage}
+                    />
+                  </div>
+                </div>
+
+                {/* Dialogue Text Block */}
+                <div className={styles.textBlock}>
+                  <div>
+                    <span className={styles.messageLabel}>MESSAGE:</span>
+                    <p className={styles.messageText}>
+                      {currentText}
+                      <span className={styles.cursor} />
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
         </div>
-        <div className={styles.arrowBounce}>▼</div>
       </div>
-    </div>
   );
 }

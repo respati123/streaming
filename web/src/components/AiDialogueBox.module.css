@@ -1,95 +1,284 @@
-.dialogueContainer {
-  position: absolute;
-  bottom: 40px; /* Closer to the bottom edge */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70%;
-  max-width: 600px;
-  z-index: 15000;
-  
-  /* Entrance animation */
-  animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --surface: #0D0D0D;
+  --surface-dim: #0a0a0a;
+  --surface-bright: #1a1a1a;
+  --accent: #B5A68A;
+  --accent-muted: #2a2620;
+  --border: #2a2a2a;
 }
 
-.dialogueContainer.exit {
-  animation: fadeOut 0.6s ease-in forwards;
+/* Dialogue Overlay (Bottom) */
+.overlay {
+  position: fixed;
+  bottom: 40px;
+  left: 0;
+  width: 100%;
+  padding: 0 40px;
+  z-index: 9998;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.namePlate {
-  font-family: "VT323", monospace;
-  font-size: 24px;
-  color: #fbbf24; /* Yellow text */
-  background-color: #1f2937; /* Dark background */
-  border: 4px solid #d1d5db; /* Light border */
-  border-bottom: none;
-  display: inline-block;
-  padding: 2px 12px;
-  border-radius: 8px 8px 0 0;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-  margin-left: 20px;
+.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.exit {
+  transform: translateY(40px);
+  opacity: 0;
+  transition: transform 0.4s ease-in, opacity 0.4s ease-in;
+}
+
+.container {
+  max-width: 800px; /* Reduced from 1152px */
+  margin: 0 auto;
   position: relative;
-  z-index: 2;
-  text-shadow: 2px 2px 0 #000;
 }
 
+/* Name Tag */
+.nameTagContainer {
+  position: absolute;
+  top: -34px;
+  left: 12px;
+}
+
+.nameTag {
+  background: var(--accent);
+  color: var(--surface);
+  padding: 4px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tagLabel {
+  font-size: 9px;
+  opacity: 0.8;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+
+/* Main Box */
 .dialogueBox {
-  font-family: "VT323", monospace;
-  font-size: 26px;
-  color: white;
-  background-color: rgba(31, 41, 55, 0.95); /* Semi-transparent dark bg */
-  border: 4px solid #d1d5db; /* Light gray thick border */
+  background: rgba(13, 13, 13, 0.85);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 16px 24px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.8);
+  border-top-left-radius: 0;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.innerBorder {
+  padding: 2px;
+  border: 1px solid rgba(181, 166, 138, 0.05);
+}
+
+.content {
+  display: flex;
+  gap: 20px;
+  padding: 16px;
+}
+
+/* Avatar Area */
+.avatarArea {
+  flex-shrink: 0;
+}
+
+.avatarBox {
+  width: 96px; /* Reduced from 128px */
+  height: 96px;
+  border: 1px solid rgba(181, 166, 138, 0.15);
+  border-radius: 6px;
   position: relative;
-  z-index: 1;
-  text-shadow: 2px 2px 0 #000;
-  line-height: 1.4;
+  overflow: hidden;
+  background: #111;
 }
 
-.text {
-  /* This creates a simple typewriter effect natively, but since audio sync is hard, 
-     we just let it display normally or use a basic fade in */
-  animation: fadeInText 0.5s ease-in forwards;
-}
-
-.arrowBounce {
+.avatarOverlay {
   position: absolute;
-  bottom: 10px;
-  right: 20px;
-  color: white;
-  font-size: 24px;
-  animation: bounce 1s infinite;
+  inset: 0;
+  background: rgba(181, 166, 138, 0.05);
+  mix-blend-mode: overlay;
+  z-index: 2;
 }
 
-@keyframes slideUp {
-  0% {
-    transform: translate(-50%, 50px);
-    opacity: 0;
-  }
-  100% {
-    transform: translate(-50%, 0);
-    opacity: 1;
-  }
+.crossPattern {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 3;
 }
 
-@keyframes fadeOut {
-  0% {
-    transform: translate(-50%, 0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, 20px) scale(0.95);
-    opacity: 0;
-  }
+.crossLine {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: var(--accent);
 }
 
-@keyframes fadeInText {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.crossLine1 { transform: rotate(45deg); }
+.crossLine2 { transform: rotate(-45deg); }
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%);
+  opacity: 0.8;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+.avatarImage:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+/* Text Block */
+.textBlock {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.messageLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(181, 166, 138, 0.5);
+  display: block;
+  margin-bottom: 6px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.messageText {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px; /* Reduced from 20px */
+  color: #E2E2E2; /* Changed from accent to light gray for readability, matching alert */
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+.cursor {
+  display: inline-block;
+  width: 6px;
+  height: 1.1em;
+  background-color: var(--accent);
+  vertical-align: middle;
+  margin-left: 4px;
+  animation: blink 1s step-end infinite;
+}
+
+.amountDisplay {
+  align-self: flex-end;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+  background: rgba(181, 166, 138, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(181, 166, 138, 0.1);
+}
+
+.amountLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(181, 166, 138, 0.6);
+  letter-spacing: 0.1em;
+}
+
+.amountValue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Interactivity Hints */
+.hints {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 12px;
+}
+
+.hintText {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(181, 166, 138, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.keycap {
+  border: 1px solid rgba(181, 166, 138, 0.2);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+.nextButtonArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nextButton {
+  background: rgba(181, 166, 138, 0.05);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(181, 166, 138, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Help Footer */
+.helpFooter {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.helpText {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(181, 166, 138, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.helpKey {
+  color: rgba(181, 166, 138, 0.4);
+  background: rgba(181, 166, 138, 0.05);
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(181, 166, 138, 0.1);
+}
+
+/* Animations */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }

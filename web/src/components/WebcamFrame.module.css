@@ -1,0 +1,61 @@
+.container {
+  position: fixed;
+  right: 40px;
+  top: 80px; /* Above the chat list which is bottom-right */
+  z-index: 10;
+}
+
+.frame {
+  width: 320px;
+  height: 180px; /* 16:9 Aspect Ratio */
+  border: 1px solid rgba(181, 166, 138, 0.4); /* Subtle Warm Sand border */
+  background: rgba(13, 13, 13, 0.15); /* Very light dark tint */
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.label {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: #B5A68A; /* Warm Sand */
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+/* Corner Accents */
+.corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: #B5A68A;
+  border-style: solid;
+}
+
+.topLeft {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+
+.topRight {
+  top: -1px;
+  right: -1px;
+  border-width: 2px 2px 0 0;
+}
+
+.bottomLeft {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 2px 2px;
+}
+
+.bottomRight {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+}

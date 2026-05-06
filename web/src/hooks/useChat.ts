@@ -33,8 +33,7 @@ export function useChat({ maxMessages = 50, onTransition, onDonation }: UseChatO
 
   const connect = useCallback(() => {
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    const host = location.hostname === "localhost" ? "localhost:3000" : location.host;
-    const ws = new WebSocket(`${protocol}//${host}/ws/chat`);
+    const ws = new WebSocket(`${protocol}//${location.host}/ws/chat`);
 
     ws.onopen = () => {
       console.log("[ws] connected");

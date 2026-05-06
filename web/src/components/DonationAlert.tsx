@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { playDonationSound } from "../lib/audio";
+import { useState, useEffect, useRef } from "react";
 import styles from "./DonationAlert.module.css";
 
 interface DonationData {
@@ -20,108 +19,106 @@ export function DonationAlert({ donation }: Props) {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [current, setCurrent] = useState<DonationData | null>(null);
+  const [currentFrame, setCurrentFrame] = useState(1);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!visible || !current?.audioBase64) return;
+
+    const audio = new Audio(`data:audio/mp3;base64,${current.audioBase64}`);
+    audio.volume = 1;
+    audioRef.current = audio;
+
+    audio.play().catch(() => {});
+
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, [visible, current?.audioBase64]);
+  useEffect(() => {
+    if (!visible) return;
+
+    const interval = setInterval(() => {
+      setCurrentFrame((prev) => (prev % 3) + 1);
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [visible]);
 
   useEffect(() => {
     if (!donation) return;
 
     setCurrent(donation);
-    setVisible(true);
     setExiting(false);
 
-    let fallbackTimer: Timer;
+    // Enter on next frame so CSS transition triggers
+    requestAnimationFrame(() => {
+      setVisible(true);
+    });
 
-    const triggerExit = (delayMs: number = 0) => {
-      fallbackTimer = setTimeout(() => {
-        setExiting(true);
-        setTimeout(() => {
-          setVisible(false);
-          setCurrent(null);
-        }, 600); // 600ms matches CSS exit animation duration
-      }, delayMs);
-    };
+    setCurrentFrame(1);
 
-    // Play TTS audio if available, otherwise fallback to generated tone
-    if (donation.audioBase64) {
-      const audio = new Audio(`data:audio/mpeg;base64,${donation.audioBase64}`);
-      audio.volume = 0.8;
+    const delay = donation.audioDurationMs
+      ? donation.audioDurationMs + 3000
+      : 5000 + donation.message.length * 40;
 
-      // Wait for exactly when the audio finishes to start fadeout
-      audio.onended = () => {
-        triggerExit(1000); // 1s buffer after exact audio ends
-      };
+    const exitTimer = setTimeout(() => {
+      setExiting(true);
+      setVisible(false);
+    }, Math.min(delay, 15000));
 
-      audio.play().catch((e) => {
-        console.warn("[audio] TTS play failed, falling back to tone:", e);
-        playDonationSound();
-        triggerExit(calcDisplayDuration(donation.message));
-      });
-    } else {
-      playDonationSound();
-      triggerExit(calcDisplayDuration(donation.message));
-    }
-
-    return () => {
-      if (fallbackTimer) clearTimeout(fallbackTimer);
-    };
+    return () => clearTimeout(exitTimer);
   }, [donation]);
 
-  if (!visible || !current) return null;
-
-  const formatted = formatRupiah(current.amount);
+  if (!current) return null;
 
   return (
-    <div className={`${styles.alert} ${exiting ? styles.exit : ""}`}>
-      <div className={styles.glow} />
-      <div className={styles.content}>
-        <div className={styles.icon}>💎</div>
-        <div className={styles.info}>
-          <div className={styles.header}>
-            <span className={styles.name}>{current.donatorName}</span>
-            <span className={styles.amount}>{formatted}</span>
+    <div className={`${styles.alert} ${visible && !exiting ? styles.visible : exiting ? styles.exit : ""}`}>
+      <main className={styles.card} id="donation-alert">
+        {/* Left Section (Avatar/Icon) */}
+        <section className={styles.leftSection}>
+          <div className={styles.avatarBox}>
+            <img
+              className={styles.avatarImage}
+              src={`/images/donation${currentFrame}.png`}
+              alt="Avatar"
+            />
           </div>
-          {current.message && (
-            <div className={styles.message}>{current.message}</div>
-          )}
-        </div>
-      </div>
-      <div className={styles.particles}>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <span
-            key={i}
-            className={styles.particle}
-            style={{
-              "--delay": `${Math.random() * 0.5}s`,
-              "--x": `${(Math.random() - 0.5) * 200}px`,
-              "--y": `${-Math.random() * 300 - 100}px`,
-              "--size": `${Math.random() * 6 + 3}px`,
-            } as React.CSSProperties}
-          />
-        ))}
-      </div>
+        </section>
+
+        {/* Right Section (Content Area) */}
+        <section className={styles.rightSection}>
+          {/* Top Content: Username & Label */}
+          <div className={styles.userInfo}>
+            <h2>{current.donatorName}</h2>
+          </div>
+
+          <hr className={styles.divider} />
+
+          {/* Middle Content: Donation Amount */}
+          <div className={styles.donationInfo}>
+            <span className={styles.amountText}>
+              Rp {current.amount.toLocaleString("id-ID")}
+            </span>
+            <span className={styles.amountLabel}>
+              Donation Amount
+            </span>
+          </div>
+
+          <hr className={styles.divider} />
+
+          {/* Bottom Content: Custom Message */}
+          <div className={styles.messageArea}>
+            <strong>THANK YOU!</strong><br />
+            <span className={styles.messageText}>{current.message}</span>
+            {/* <span className={styles.cursor}></span> */}
+          </div>
+        </section>
+
+        {/* Decorative Glow */}
+        <div className={styles.glow}></div>
+      </main>
     </div>
   );
 }
-
-function formatRupiah(amount: number): string {
-  return "Rp " + amount.toLocaleString("id-ID");
-}
-
-/**
- * Calculate how long the alert should stay visible based on message length.
- * - No message: 4s (base time to read the name + amount)
- * - Short message (< 50 chars): up to 6s
- * - Longer message: scales at ~150ms per character
- * - Max cap: 15s
- */
-function calcDisplayDuration(message: string): number {
-  const BASE_MS = 4000;
-  const MIN_MS = 4000;
-  const MAX_MS = 8000;
-  const MS_PER_CHAR = 40;
-
-  if (!message) return BASE_MS;
-
-  const duration = BASE_MS + message.length * MS_PER_CHAR;
-  return Math.min(Math.max(duration, MIN_MS), MAX_MS);
-}
-
