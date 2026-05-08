@@ -12,7 +12,7 @@ export const TIERS: Tier[] = [
   { name: "viper",        badge: "viper",             color: "#FFD700", minPoints: 5000 },
   { name: "shield_gold",  badge: "shield_gold",       color: "#FF6B00", minPoints: 2000 },
   { name: "shield_blue",  badge: "shield_blue",       color: "#00AAFF", minPoints: 500 },
-  { name: "pokeball",     badge: "pokeball",          color: "#AAAAAA", minPoints: 0 },
+  { name: "pokeball",     badge: "pokeball",          color: "#FFFFFF", minPoints: 0 },
 ];
 
 export function getTier(points: number, isOwner = false, isModerator = false): Tier {

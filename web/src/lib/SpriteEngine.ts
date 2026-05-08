@@ -10,6 +10,11 @@ export interface Entity {
   currentFrame: number;
   frameTimer: number;
   scale: number;
+  username?: string;
+  userColor?: string;
+  badge?: string;
+  chatText?: string;
+  chatTimer?: number;
 }
 
 const ACTION_FRAMES: Record<string, number> = {
@@ -43,6 +48,7 @@ export class SpriteEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private sprites: Record<string, HTMLImageElement[]> = {};
+  private badges: Record<string, HTMLImageElement> = {};
   private entities: Entity[] = [];
   private isRunning = false;
   private lastTime = 0;
@@ -65,32 +71,39 @@ export class SpriteEngine {
       for (let i = 0; i < count; i++) {
         const frameName = `${prefix}${action}_${i.toString().padStart(3, '0')}.png`;
 
-        promises.push(new Promise<void>((resolve, reject) => {
+        promises.push(new Promise<void>((resolve) => {
           const img = new Image();
           img.onload = () => {
             this.sprites[action][i] = img;
             resolve();
           };
-          img.onerror = (err) => {
-            console.error(`Failed to load ${frameName}`, err);
-            reject(err);
+          img.onerror = () => {
+            console.warn(`[SpriteEngine] Missing: ${basePath}/${action}/${frameName}`);
+            resolve();
           };
           img.src = `${basePath}/${action.replace(/ /g, "%20")}/${frameName.replace(/ /g, "%20")}`;
         }));
       }
     }
 
+    for (const name of ["pokeball", "shield_blue", "shield_gold", "shield_futuristic", "viper"]) {
+      promises.push(new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          this.badges[name] = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = `/images/badges/${name}.png`;
+      }));
+    }
+
     await Promise.all(promises);
   }
 
-  public spawnInitial(count: number) {
-    this.entities = [];
-    for (let i = 0; i < count; i++) {
-      this.spawn();
-    }
-  }
+  public spawnForUser(username: string, badge?: string, color?: string) {
+    if (this.entities.some(e => e.username === username)) return;
 
-  public spawn() {
     const minX = (this.config.minXPercentage ?? 0.1) * this.canvas.width;
     const maxX = (this.config.maxXPercentage ?? 0.9) * this.canvas.width;
     const x = minX + Math.random() * (maxX - minX);
@@ -101,25 +114,37 @@ export class SpriteEngine {
 
     this.entities.push({
       id: crypto.randomUUID(),
-      x,
-      y,
-      targetX: x,
-      targetY: y,
+      x, y,
+      targetX: x, targetY: y,
       speed: 40 + Math.random() * 40,
       direction: Math.random() > 0.5 ? 1 : -1,
       currentAction: "Idle",
       currentFrame: 0,
       frameTimer: 0,
       scale: this.config.scaleMultiplier ?? 1.0,
+      username,
+      badge,
+      userColor: color,
     });
   }
 
-  public triggerGlobalAttack() {
-    this.entities.forEach(e => {
-      e.currentAction = "Attacking";
-      e.currentFrame = 0;
-      e.frameTimer = 0;
-    });
+  public removeUser(username: string) {
+    this.entities = this.entities.filter(e => e.username !== username);
+  }
+
+  public getEntity(username: string): Entity | undefined {
+    return this.entities.find(e => e.username === username);
+  }
+
+  public showChat(username: string, text: string) {
+    const e = this.entities.find(ent => ent.username === username);
+    if (!e) return;
+    e.chatText = text;
+    e.chatTimer = 4000;
+  }
+
+  public getEntities(): Entity[] {
+    return this.entities;
   }
 
   private resize() {
@@ -141,13 +166,10 @@ export class SpriteEngine {
 
   private loop(timestamp: number) {
     if (!this.isRunning) return;
-
     const dt = Math.min(timestamp - this.lastTime, 100);
     this.lastTime = timestamp;
-
     this.update(dt);
     this.draw();
-
     requestAnimationFrame(this.loop.bind(this));
   }
 
@@ -157,10 +179,7 @@ export class SpriteEngine {
       : ACTIONS;
 
     const weights: Record<string, number> = {
-      "Idle": 3,
-      "Walking": 3,
-      "Jumping": 1,
-      "Attacking": 1,
+      "Idle": 3, "Walking": 3, "Jumping": 1, "Attacking": 1,
     };
 
     const pool = available.flatMap(a => Array(weights[a] ?? 1).fill(a));
@@ -224,13 +243,20 @@ export class SpriteEngine {
         if (e.currentFrame >= maxFrames) {
           if (LOOP_ACTIONS.has(e.currentAction)) {
             e.currentFrame = 0;
-
             if (e.currentAction === "Idle" && Math.random() < 0.3) {
               this.pickNextAction(e);
             }
           } else {
             this.pickNextAction(e);
           }
+        }
+      }
+
+      if (e.chatTimer !== undefined) {
+        e.chatTimer -= dt;
+        if (e.chatTimer <= 0) {
+          e.chatText = undefined;
+          e.chatTimer = undefined;
         }
       }
     });
@@ -244,13 +270,11 @@ export class SpriteEngine {
     sorted.forEach(e => {
       const frames = this.sprites[e.currentAction];
       if (!frames) return;
-
       const sprite = frames[e.currentFrame];
       if (!sprite) return;
 
       const dw = sprite.width * e.scale;
       const dh = sprite.height * e.scale;
-
       const drawX = e.x - (dw / 2);
       const drawY = e.y - dh;
 
@@ -260,7 +284,143 @@ export class SpriteEngine {
       this.ctx.imageSmoothingEnabled = false;
       this.ctx.drawImage(sprite, -dw / 2, 0, dw, dh);
       this.ctx.restore();
+
+      if (e.username) {
+        this.drawLabel(e, drawY);
+      }
     });
+  }
+
+  private drawLabel(e: Entity, spriteTop: number) {
+    const fontSize = Math.max(10, Math.round(12 * e.scale));
+    const badgeSize = fontSize + 2;
+    const pad = 4;
+
+    let currentY = spriteTop - 3;
+
+    // Chat bubble
+    if (e.chatText) {
+      const bubbleFont = Math.max(12, Math.round(14 * e.scale));
+      this.ctx.font = `${bubbleFont}px monospace`;
+
+      const maxW = 120;
+      const lines = this.wrapText(e.chatText, maxW);
+      const lineH = bubbleFont + 2;
+      const padX = 8, padY = 5;
+      const bubbleW = maxW + padX * 2;
+      const bubbleH = lines.length * lineH + padY * 2;
+
+      const bubbleX = e.x - bubbleW / 2;
+      const bubbleY = currentY - bubbleH;
+
+      const alpha = (e.chatTimer ?? 0) < 500 ? (e.chatTimer ?? 0) / 500 : 1;
+      this.ctx.save();
+      this.ctx.globalAlpha = alpha;
+
+      // White bg
+      this.ctx.fillStyle = "#FFFFFF";
+      this.drawRoundRect(bubbleX, bubbleY, bubbleW, bubbleH, 4);
+      this.ctx.fill();
+
+      // Black border
+      this.ctx.strokeStyle = "#000000";
+      this.ctx.lineWidth = 1.5;
+      this.drawRoundRect(bubbleX, bubbleY, bubbleW, bubbleH, 4);
+      this.ctx.stroke();
+
+      // Tail
+      this.ctx.fillStyle = "#FFFFFF";
+      this.ctx.beginPath();
+      this.ctx.moveTo(e.x - 4, bubbleY + bubbleH);
+      this.ctx.lineTo(e.x, bubbleY + bubbleH + 5);
+      this.ctx.lineTo(e.x + 4, bubbleY + bubbleH);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.strokeStyle = "#000000";
+      this.ctx.lineWidth = 1.5;
+      this.ctx.beginPath();
+      this.ctx.moveTo(e.x - 4, bubbleY + bubbleH);
+      this.ctx.lineTo(e.x, bubbleY + bubbleH + 5);
+      this.ctx.lineTo(e.x + 4, bubbleY + bubbleH);
+      this.ctx.stroke();
+
+      // Text
+      this.ctx.fillStyle = "#000000";
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "top";
+      lines.forEach((line, i) => {
+        this.ctx.fillText(line, e.x, bubbleY + padY + i * lineH);
+      });
+
+      this.ctx.globalAlpha = 1;
+      this.ctx.restore();
+
+      currentY = bubbleY - 3;
+    }
+
+    // Name + badge — no background, colored text with outline
+    this.ctx.font = `bold ${fontSize}px monospace`;
+    const textW = this.ctx.measureText(e.username).width;
+    const badgeW = e.badge && this.badges[e.badge] ? badgeSize + 3 : 0;
+    const totalW = textW + badgeW;
+    const nameX = e.x - totalW / 2;
+    const nameY = currentY - badgeSize;
+
+    // Badge
+    if (e.badge && this.badges[e.badge]) {
+      this.ctx.save();
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.drawImage(
+        this.badges[e.badge],
+        nameX,
+        nameY + (badgeSize - (fontSize + 2)) / 2,
+        badgeSize,
+        badgeSize
+      );
+      this.ctx.restore();
+    }
+
+    // Username with tier color + dark outline
+    const textColor = e.userColor || "#FFFFFF";
+    this.ctx.textAlign = "left";
+    this.ctx.textBaseline = "bottom";
+    this.ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeText(e.username, nameX + badgeW, currentY);
+    this.ctx.fillStyle = textColor;
+    this.ctx.fillText(e.username, nameX + badgeW, currentY);
+  }
+
+  private wrapText(text: string, maxWidth: number): string[] {
+    const words = text.split(" ");
+    const lines: string[] = [];
+    let current = "";
+
+    for (const word of words) {
+      const test = current ? `${current} ${word}` : word;
+      if (this.ctx.measureText(test).width > maxWidth && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = test;
+      }
+    }
+    if (current) lines.push(current);
+    return lines.length ? lines : [text];
+  }
+
+  private drawRoundRect(x: number, y: number, w: number, h: number, r: number) {
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + r, y);
+    this.ctx.lineTo(x + w - r, y);
+    this.ctx.arcTo(x + w, y, x + w, y + r, r);
+    this.ctx.lineTo(x + w, y + h - r);
+    this.ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    this.ctx.lineTo(x + r, y + h);
+    this.ctx.arcTo(x, y + h, x, y + h - r, r);
+    this.ctx.lineTo(x, y + r);
+    this.ctx.arcTo(x, y, x + r, y, r);
+    this.ctx.closePath();
   }
 
   public destroy() {
