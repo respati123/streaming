@@ -1,5 +1,5 @@
 import { broadcastChat } from "../lib/ws";
-import { generateDonationTts, generateDialogueTts } from "./elevenlabs";
+import { generateDonationTts, generateDialogueTts, generateSimpleTts } from "./elevenlabs";
 
 interface QueuedDonation {
   id: number;
@@ -34,8 +34,9 @@ class DonationQueue {
       // 1. Generate TTS
       let tts;
       if (!donation.skipTts) {
-        if (donation.isAiReply && donation.userMessage) {
-          tts = await generateDialogueTts(donation.userMessage, donation.message);
+        if (donation.isAiReply) {
+          // Revert: Use simple single-speaker TTS for AI responses
+          tts = await generateSimpleTts(donation.message);
         } else {
           tts = await generateDonationTts(
             donation.donatorName,

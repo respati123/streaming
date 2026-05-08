@@ -1,0 +1,22 @@
+.plaza {
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/images/park_plaza.png'); /* The user's uploaded image */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  position: relative;
+}
+
+.chatContainer {
+  position: absolute;
+  right: 40px;
+  top: 40px;
+  bottom: 40px;
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  z-index: 20;
+}

@@ -165,6 +165,48 @@ export async function generateDialogueTts(
 }
 
 /**
+ * Generate TTS audio for plain text using ElevenLabs SDK.
+ */
+export async function generateSimpleTts(
+  text: string
+): Promise<TtsResult | null> {
+  if (!ELEVENLABS_API_KEY || !VOICE_ID) {
+    console.error("[elevenlabs] Cannot generate simple TTS: missing API key or Voice ID");
+    return null;
+  }
+
+  try {
+    const audioStream = await elevenlabs.textToSpeech.convert(VOICE_ID, {
+      modelId: "eleven_flash_v2_5",
+      text: text,
+      outputFormat: "mp3_44100_128",
+      voiceSettings: {
+        stability: 0.5,
+        similarityBoost: 0.75,
+        useSpeakerBoost: true,
+        speed: 1.0,
+      },
+    });
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of audioStream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const audioBuffer = Buffer.concat(chunks);
+    if (audioBuffer.byteLength === 0) return null;
+
+    const audioBase64 = audioBuffer.toString("base64");
+    const wordCount = text.split(/\s+/).length;
+    const durationMs = Math.max((wordCount / 110) * 60 * 1000, 3000);
+
+    return { audioBase64, durationMs };
+  } catch (error: any) {
+    console.error("[elevenlabs] Simple TTS generation failed:", error?.message);
+    return null;
+  }
+}
+
+/**
  * Ping ElevenLabs to verify connectivity and API key validity.
  * Returns error message string on failure, null on success.
  */

@@ -15,4 +15,5 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end; /* Chat stacks at the bottom */
+  z-index: 20; /* Keep it above the canvas */
 }

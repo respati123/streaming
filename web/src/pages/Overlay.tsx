@@ -4,6 +4,7 @@ import { TransitionOverlay, useTransition } from "../components/TransitionOverla
 import { DonationAlert } from "../components/DonationAlert";
 import { AiDialogueBox } from "../components/AiDialogueBox";
 import { WebcamFrame } from "../components/WebcamFrame";
+import { CanvasArena } from "../components/CanvasArena";
 import { useChat } from "../hooks/useChat";
 import { unlockAudio } from "../lib/audio";
 import styles from "./Overlay.module.css";
@@ -31,6 +32,8 @@ export function Overlay() {
     originalDonatorName?: string;
   } | null>(null);
 
+  const [lastDonationId, setLastDonationId] = useState<number>(0);
+
   const { messages } = useChat({
     maxMessages: 25,
     onTransition: (type) => {
@@ -55,6 +58,7 @@ export function Overlay() {
         setAiReply(data);
       } else {
         setDonation(data);
+        setLastDonationId(data.id);
       }
     }
   });
@@ -84,6 +88,9 @@ export function Overlay() {
 
       <DonationAlert donation={donation} />
       <AiDialogueBox dialogue={aiReply} />
+      
+      {/* 2D Canvas Engine for 100+ Characters */}
+      <CanvasArena triggerAttack={lastDonationId} />
     </div>
   );
 }
