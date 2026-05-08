@@ -1,13 +1,16 @@
-import React, { useEffect, useRef } from 'react';
-import { SpriteEngine, EngineConfig } from '../lib/SpriteEngine';
+import { useEffect, useRef } from 'react';
+import { SpriteEngine } from '../lib/SpriteEngine';
+import type { EngineConfig } from '../lib/SpriteEngine';
 
 interface CanvasArenaProps {
   triggerAttack?: number;
   bounds?: EngineConfig;
   spawnCount?: number;
+  zIndex?: number;
+  characterId?: string;
 }
 
-export function CanvasArena({ triggerAttack, bounds, spawnCount = 1 }: CanvasArenaProps) {
+export function CanvasArena({ triggerAttack, bounds, spawnCount = 1, zIndex = -1, characterId = "char_1" }: CanvasArenaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<SpriteEngine | null>(null);
 
@@ -17,8 +20,10 @@ export function CanvasArena({ triggerAttack, bounds, spawnCount = 1 }: CanvasAre
     const engine = new SpriteEngine(canvasRef.current, bounds);
     engineRef.current = engine;
 
-    // Load assets and start
-    engine.loadAssets().then(() => {
+    const basePath = `/images/characters/${characterId}`;
+    const prefix = `${characterId}_`;
+
+    engine.loadAssets(basePath, prefix).then(() => {
       engine.spawnInitial(spawnCount);
       engine.start();
     }).catch(err => {
@@ -29,14 +34,11 @@ export function CanvasArena({ triggerAttack, bounds, spawnCount = 1 }: CanvasAre
       engine.destroy();
       engineRef.current = null;
     };
-  }, []);
+  }, [characterId]);
 
-  // Handle attack triggers
   useEffect(() => {
     if (triggerAttack && engineRef.current) {
       engineRef.current.triggerGlobalAttack();
-      // Optional: spawn a new character on every donation!
-      // engineRef.current.spawn(); 
     }
   }, [triggerAttack]);
 
@@ -49,8 +51,9 @@ export function CanvasArena({ triggerAttack, bounds, spawnCount = 1 }: CanvasAre
         left: 0,
         width: '100%',
         height: '100%',
-        pointerEvents: 'none', // Let clicks pass through
-        zIndex: -1 // Put it behind all other UI elements
+        pointerEvents: 'none',
+        zIndex: zIndex,
+        imageRendering: 'pixelated',
       }}
     />
   );

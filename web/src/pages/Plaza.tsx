@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { ChatMessage as ChatMessageComponent } from "../components/ChatMessage";
 import { CanvasArena } from "../components/CanvasArena";
 import { useChat } from "../hooks/useChat";
@@ -14,10 +15,18 @@ export function Plaza() {
         ))}
       </div>
 
-      {/* 2D Canvas Engine restricted to the pavement area of the park */}
-      <CanvasArena 
-        spawnCount={5} 
-        bounds={{ minYPercentage: 0.45, maxYPercentage: 0.95 }} 
+      <CanvasArena
+        characterId="char_2"
+        spawnCount={5}
+        bounds={{
+          minXPercentage: 0.12,
+          maxXPercentage: 0.88,
+          minYPercentage: 0.28,
+          maxYPercentage: 0.88,
+          allowedActions: ["Idle", "Walking", "Jumping"],
+          scaleMultiplier: 0.4
+        }}
+        zIndex={10}
       />
     </div>
   );
