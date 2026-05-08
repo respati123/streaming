@@ -22,6 +22,7 @@ const ACTION_FRAMES: Record<string, number> = {
   "Walking": 8,
   "Jumping": 8,
   "Attacking": 8,
+  "Spawning": 8,
 };
 
 const ACTIONS = Object.keys(ACTION_FRAMES);
@@ -31,6 +32,7 @@ const ACTION_FPS: Record<string, number> = {
   "Walking": 10,
   "Jumping": 8,
   "Attacking": 12,
+  "Spawning": 14,
 };
 
 const LOOP_ACTIONS = new Set(["Idle", "Walking"]);
@@ -86,6 +88,21 @@ export class SpriteEngine {
       }
     }
 
+    // Spawn effect
+    this.sprites["Spawning"] = [];
+    for (let i = 0; i < 8; i++) {
+      const spawnFrame = `spawn_${i.toString().padStart(3, '0')}.png`;
+      promises.push(new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          this.sprites["Spawning"][i] = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = `/images/characters/spawn/${spawnFrame}`;
+      }));
+    }
+
     for (const name of ["pokeball", "shield_blue", "shield_gold", "shield_futuristic", "viper"]) {
       promises.push(new Promise<void>((resolve) => {
         const img = new Image();
@@ -118,7 +135,7 @@ export class SpriteEngine {
       targetX: x, targetY: y,
       speed: 40 + Math.random() * 40,
       direction: Math.random() > 0.5 ? 1 : -1,
-      currentAction: "Idle",
+      currentAction: "Spawning",
       currentFrame: 0,
       frameTimer: 0,
       scale: this.config.scaleMultiplier ?? 1.0,
@@ -241,7 +258,11 @@ export class SpriteEngine {
         e.currentFrame++;
 
         if (e.currentFrame >= maxFrames) {
-          if (LOOP_ACTIONS.has(e.currentAction)) {
+          if (e.currentAction === "Spawning") {
+            e.currentAction = "Idle";
+            e.currentFrame = 0;
+            e.frameTimer = 0;
+          } else if (LOOP_ACTIONS.has(e.currentAction)) {
             e.currentFrame = 0;
             if (e.currentAction === "Idle" && Math.random() < 0.3) {
               this.pickNextAction(e);
@@ -268,22 +289,38 @@ export class SpriteEngine {
     const sorted = [...this.entities].sort((a, b) => a.y - b.y);
 
     sorted.forEach(e => {
-      const frames = this.sprites[e.currentAction];
-      if (!frames) return;
-      const sprite = frames[e.currentFrame];
-      if (!sprite) return;
+      // During Spawning, draw Idle sprite underneath + spawn overlay on top
+      const charAction = e.currentAction === "Spawning" ? "Idle" : e.currentAction;
+      const charFrame = e.currentAction === "Spawning" ? 0 : e.currentFrame;
 
-      const dw = sprite.width * e.scale;
-      const dh = sprite.height * e.scale;
+      const charFrames = this.sprites[charAction];
+      if (!charFrames) return;
+      const charSprite = charFrames[charFrame];
+      if (!charSprite) return;
+
+      const dw = charSprite.width * e.scale;
+      const dh = charSprite.height * e.scale;
       const drawX = e.x - (dw / 2);
       const drawY = e.y - dh;
 
+      // Character sprite
       this.ctx.save();
       this.ctx.translate(drawX + dw / 2, drawY);
       this.ctx.scale(e.direction, 1);
       this.ctx.imageSmoothingEnabled = false;
-      this.ctx.drawImage(sprite, -dw / 2, 0, dw, dh);
+      this.ctx.drawImage(charSprite, -dw / 2, 0, dw, dh);
       this.ctx.restore();
+
+      // Spawn effect overlay
+      if (e.currentAction === "Spawning") {
+        const spawnFrames = this.sprites["Spawning"];
+        if (spawnFrames && spawnFrames[e.currentFrame]) {
+          this.ctx.save();
+          this.ctx.imageSmoothingEnabled = false;
+          this.ctx.drawImage(spawnFrames[e.currentFrame], drawX, drawY, dw, dh);
+          this.ctx.restore();
+        }
+      }
 
       if (e.username) {
         this.drawLabel(e, drawY);
